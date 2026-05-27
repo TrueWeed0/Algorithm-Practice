@@ -1,10 +1,10 @@
 # [level 3] 숫자 야구 - 451808 
 
-[문제 링크](https://school.programmers.co.kr/learn/courses/30/lessons/451808) 
+[문제 링크](https://school.programmers.co.kr/learn/courses/30/lessons/451808#) 
 
 ### 성능 요약
 
-메모리: 93.5 MB, 시간: 4975.03 ms
+메모리: 81.5 MB, 시간: 3923.86 ms
 
 ### 구분
 
@@ -16,7 +16,7 @@
 
 ### 제출 일자
 
-2026년 05월 28일 02:05:12
+2026년 05월 28일 02:35:17
 
 ### 문제 설명
 
