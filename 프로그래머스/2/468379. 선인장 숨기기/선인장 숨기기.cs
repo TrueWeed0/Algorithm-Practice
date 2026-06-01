@@ -2,28 +2,58 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// 1. 각 행 마다 가로 w 크기 만큼 비 맞는 순서의 최솟값 기록
-/// 2. 각 열 마다 세로 h 크기 만큼 비 맞는 순서의 최솟값 기록
-/// 3. 각 그룹의 최솟값 중 제일 큰 값의 그룹을 선택
+/// 1. 각 칸이 몇 번째에 비를 맞는지 기록
+/// 2. 각 행마다 가로 w칸 구간의 최솟값을 기록
+/// 3. 행마다 기록한 최솟값을 세로 h칸씩 비교하여 h*w 영역의 최솟값을 기록
+/// 4. 각 그룹의 최솟값 중 제일 큰 값의 그룹을 선택
 /// </summary>
 
 public class Solution {
 
+    // rainTime = 각 칸이 비를 맞는 시간 기록
+    // m = 행 크기, n = 열 크기, h = 높이, w = 너비
+    // maxTime = 비 맞는 시간의 최댓값
+    public int[][] rainTime;
+    public int m,n,h,w;
+    public int maxTime;
+    
     public int[] solution(int m, int n, int h, int w, int[,] drops) {
+        // answer = 최종 좌표값
+        // rowMin = 가로 w칸 구간의 비 맞는 시간의 최솟값
+        // rectMin = h*w 영역의 최솟값
         int[] answer = new int[2];
-        int[][] rainTime = new int[m][];
         int[][] rowMin = new int[m][];
-        int max = drops.GetLength(0) + 1;
+        int[][] rectMin = new int[m-h+1][];
 
+        rainTime = new int[m][];
+        maxTime = drops.GetLength(0) + 1;
+        this.m = m;
+        this.n = n;
+        this.h = h;
+        this.w = w;
+
+        Init(drops);        
+        SetRowMin(rowMin);
+        SetRectMin(rectMin, rowMin);        
+        answer = FindMaxTime(rectMin);
+        
+        return answer;
+    }
+    
+    // 각 칸이 비를 맞는 시간 기록 함수
+    public void Init(int[,] drops)
+    {
+        //모든 칸을 maxTime 기록
         for(int i = 0; i<m; i++)
         {
             rainTime[i] = new int[n];
             for(int j = 0; j<n; j++)
             {
-                rainTime[i][j] = max;
+                rainTime[i][j] = maxTime;
             }
         }
         
+        //drops 순서대로 각 타일이 비를 맞은 시간 기록
         for(int i = 0; i<drops.GetLength(0); i++)
         {
             int row = drops[i,0];
@@ -31,8 +61,12 @@ public class Solution {
             
             rainTime[row][col] = i;
         }
-        
-        //행 마다 각 너비 만큼 최솟값 그룹 저장 (윈도우 슬라이딩)
+    }
+    
+    //각 행마다 가로 w칸 구간의 최솟값을 기록하는 함수
+    public void SetRowMin(int[][] rowMin)
+    {
+        //(윈도우 슬라이딩)
         for(int i = 0; i<m; i++)
         {
             rowMin[i] = new int[n-w+1];
@@ -62,32 +96,40 @@ public class Solution {
                 }
             }
         }
-        
-        int[][] rectMin = new int[m-h+1][];
-        
+    }
+    
+    // Row 기준으로 h*w 영역의 최솟값을 계산하는 함수
+    public void SetRectMin(int[][] rectMin, int[][] rowMin)
+    {
+        //rectMin 크기 초기화
         for (int i = 0; i <= m - h; i++)
         {
             rectMin[i] = new int[n - w + 1];
         }
         
+        //각 col마다 세로 h칸 슬라이딩 최솟값 계산
         for(int col = 0; col <= n - w; col++)
         {
             LinkedList<int> deque = new LinkedList<int>();
             
+            //같은 col에서 rowMin을 세로 h칸씩 비교하여 h*w 영역의 최솟값 계산
             for(int row = 0; row <m; row++)
             {
+                //현재 값 보다 큰 값들은 뒤에서 제거
                 while(deque.Count > 0 && rowMin[deque.Last.Value][col] >= rowMin[row][col])
                 {
                     deque.RemoveLast();
                 }
-                
+
                 deque.AddLast(row);
                 
+                //현재 높이 범위를 벗어난 인덱스 제거
                 if(deque.First.Value <= row - h)
                 {
                     deque.RemoveFirst();
                 }
                 
+                //세로 h칸 윈도우가 완성되면 최솟값 기록
                 if(row >= h-1)
                 {
                     int startRow = row - h + 1;
@@ -95,87 +137,27 @@ public class Solution {
                 }
             }
         }
-        
+    }
+    
+    // 각 h*w 영역의 최솟값 중 가장 큰 값을 가진 시작 row, col 반환 함수
+    public int[] FindMaxTime(int[][] rectMin)
+    {
+        int[] result = new int[2];
         int maxTime = 0;
-        for(int i = 0; i<rectMin.Length; i++)
+        for(int row = 0; row<rectMin.Length; row++)
         {
-            for(int j = 0; j<rectMin[i].Length; j++)
+            for(int col = 0; col<rectMin[row].Length; col++)
             {
-                if(maxTime < rectMin[i][j])
+                if(maxTime < rectMin[row][col])
                 {
-                    answer[0] = i;
-                    answer[1] = j;
-                    maxTime = rectMin[i][j];
+                    result[0] = row;
+                    result[1] = col;
+                    maxTime = rectMin[row][col];
                 }
             }
         }
         
-        return answer;
+        return result;
     }
-    
-    public void PrintMap(int[][] rainTime, int max)
-    {
-        string result = "";
-        for(int i = 0; i<rainTime.Length; i++)
-        {
-            for(int j = 0; j<rainTime[i].Length; j++)
-            {
-                if(rainTime[i][j] == max)
-                {
-                    result += "X ";
-                }
-                else
-                {
-                    result += rainTime[i][j].ToString() + " ";
-                }
-            }
-            result+="\n";
-        }
-        
-        Console.WriteLine(result);
-    }
-    
-    /*public void FindAbleNode(int m, int n, int h, int w, int time, int[,] drops)
-    {
-        //List<Node> ableNodeList = new List<Node>();
-        String resultTxt = "";
-        Node newNode = new Node(-1,-1);
-        if(time == 0)
-        {
-            for(int i = 0; i<m; i++)
-            {
-                if(i + h > m)
-                {
-                    continue;
-                }
 
-                for(int j = 0; j<n; j++)
-                {
-                    newNode = new Node(-1,-1);
-                    if(j + w <= n)
-                    {
-                        newNode.x = i;
-                        newNode.y = j;
-
-                        ableNodeList.Add(newNode);
-                    }
-
-                }
-
-            }
-        }
-        
-        for(int i = ableNodeList.Count - 1; i>=0; i--)
-        {
-            if(ableNodeList[i].x <= drops[time,0] && drops[time,0] <= ableNodeList[i].x + h - 1)
-            {
-                if(ableNodeList[i].y <= drops[time,1] && drops[time,1] <= ableNodeList[i].y + w - 1)
-                {
-                    if(ableNodeList.Count - 1 > 0)
-                        ableNodeList.RemoveAt(i);
-                }
-            }
-        }
-    }*/
-    
 }
