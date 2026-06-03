@@ -46,7 +46,7 @@ public class Solution {
             }
         }
         
-        BFX(words, 0);
+        BFS(0);
         
         int idx = allString.IndexOf(target);
         answer = distance[idx];
@@ -55,7 +55,7 @@ public class Solution {
         return answer;
     }
     
-    public void BFX(string[] words, int start)
+    public void BFS(int start)
     {
         //인접 노드를 저장할 큐 생성
         Queue<int> queue = new Queue<int>();
